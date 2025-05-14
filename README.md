@@ -2,7 +2,7 @@
 
 ## Overview
 
-Taito is a full-stack web application designed to connect freelancers and customers. As of 06:34 PM EEST on Tuesday, May 13, 2025, Taito allows users to register as customers or freelancers, log in to access role-specific dashboards, create gigs (freelancers only), and search for available gigs (customers only). The platform features a modern, responsive user interface with a teal-and-gray color scheme, enhanced with Google Fonts (Roboto and Poppins). Security is implemented through token-based authentication, and data is stored in a MySQL database.
+Taito is a full-stack web application designed to connect freelancers and customers. Taito allows users to register as customers or freelancers, log in to access role-specific dashboards, create gigs (freelancers only), and search for available gigs (customers only). The platform features a modern, responsive user interface with a teal-and-gray color scheme, enhanced with Google Fonts (Roboto and Poppins). Security is implemented through token-based authentication, and data is hosted on Google Cloud SQL with a free trial. The frontend is deployed on Vercel’s free Hobby plan.
 
 ## Features
 
@@ -20,30 +20,33 @@ Taito is a full-stack web application designed to connect freelancers and custom
 
 - Node.js (v18.x or later)
 - npm (v9.x or later)
-- MySQL (v8.x or later)
+- MySQL client (for local testing)
 - Git (optional, for version control)
 - Windows environment
+- Google Cloud account (for Cloud SQL free trial)
+- Vercel account (for frontend deployment)
 
 ### Installation
 
 1. **Clone the Repository**:
-git clone https://github.com/yourusername/taito.git
+git clone https://github.com/obioma-nduka/taito.git
 cd taito
 
 text
 
 Copy
 
-2. **Set Up the Database**:
-- Install MySQL and start the server.
-- Create a database named `taito`:
-CREATE DATABASE taito;
+2. **Set Up Google Cloud SQL**:
+- Sign up for a Google Cloud free trial at `https://cloud.google.com` (90-day, $300 credit).
+- Create a MySQL instance:
+  - In the Google Cloud Console, go to `SQL` > `Create Instance` > Select `MySQL`.
+  - Instance ID: `taito-mysql`, Root Password: Set a secure password.
+  - Region: Choose a nearby region (e.g., `europe-west1`).
+  - Machine Type: `db-f1-micro`, Storage: 10 GB.
+  - Enable Public IP and add network `0.0.0.0/0` for testing.
+- Create the `taito` database and run schema SQL:
+gcloud sql connect taito-mysql --user=root
 USE taito;
-
-text
-
-Copy
-- Create the required tables by running the following SQL commands:
 CREATE TABLE users (
 id INT AUTO_INCREMENT PRIMARY KEY,
 name VARCHAR(255) NOT NULL,
@@ -53,7 +56,6 @@ password VARCHAR(255) NOT NULL,
 role ENUM('customer', 'freelancer') NOT NULL,
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE gigs (
 id INT AUTO_INCREMENT PRIMARY KEY,
 title VARCHAR(255) NOT NULL,
@@ -63,34 +65,27 @@ freelancer_id INT NOT NULL,
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 FOREIGN KEY (freelancer_id) REFERENCES users(id)
 );
-
-text
-
-Copy
-- Insert a test user (e.g., `johndoe`):
 INSERT INTO users (name, username, email, password, role) VALUES ('John Doe', 'johndoe', 'john@example.com', '$2b$10$...hashedpassword...', 'freelancer');
 
 text
 
 Copy
-
-3. **Configure Environment Variables**:
-- Create a `.env` file in the `server` directory:
-DB_HOST=localhost
+- Note the public IP (e.g., `34.123.45.67`) and update the `.env` file in the `server` directory:
+DB_HOST=34.123.45.67
 DB_USER=root
-DB_PASSWORD=your_password
+DB_PASSWORD=your_root_password
 DB_NAME=taito
+DB_PORT=3306
 PORT=5000
 
 text
 
 Copy
-- Replace `your_password` with your MySQL root password.
 
-4. **Install Dependencies**:
+3. **Install Dependencies**:
 - **Backend**:
 cd server
-npm install
+npm install mysql2 dotenv cors
 
 text
 
@@ -103,7 +98,7 @@ text
 
 Copy
 
-5. **Run the Application**:
+4. **Run Locally**:
 - Start the backend server:
 cd ..\server
 node index.js
@@ -111,7 +106,7 @@ node index.js
 text
 
 Copy
-- In a new Command Prompt, start the frontend:
+- In a new Command Prompt, start the frontend (for local testing):
 cd ..\client
 npm start
 
@@ -120,22 +115,28 @@ text
 Copy
 - Open your browser at `http://localhost:3000`.
 
+5. **Deploy to Vercel**:
+- Sign up at `https://vercel.com` with your GitHub account.
+- Import the `taito` repository, set the root directory to `client`, and deploy.
+- Add environment variable `REACT_APP_API_URL=http://localhost:5000` in Vercel settings.
+- Get the deployed URL (e.g., `taito-client-xyz.vercel.app`).
+
 ## Usage
 
-- **Registration**: Visit `/register` to create a new account. Choose a role (customer or freelancer) and provide a username, email, and password.
-- **Login**: Use `/login` with your credentials to access the platform. You’ll be redirected to your dashboard based on your role.
-- **Freelancer Dashboard**: Create gigs with a title, description, and price. Gigs are stored in the database and visible to customers.
-- **Customer Dashboard**: Browse and search available gigs using the search bar. Only registered customers can see gigs.
-- **Homepage**: Displays a welcome message for all users. Logged-in customers can view and search gigs; others are prompted to log in or register.
-- **Logout**: Click “Logout” in the navbar to end your session and return to the homepage.
+- **Registration**: Visit `/register` (local: `http://localhost:3000/register`, Vercel: `taito-client-xyz.vercel.app/register`) to create an account. Choose a role and provide details.
+- **Login**: Use `/login` with credentials to access your dashboard.
+- **Freelancer Dashboard**: Create gigs with title, description, and price.
+- **Customer Dashboard**: Browse and search gigs (visible to registered customers).
+- **Homepage**: Shows a welcome message; logged-in customers see gigs.
+- **Logout**: Click “Logout” in the navbar to end the session.
 
 ## Database
 
-- **Schema**: The `taito` database contains two tables:
+- **Schema**: The `taito` database on Google Cloud SQL contains:
 - `users`: Stores user details (id, name, username, email, password, role, created_at).
-- `gigs`: Stores gig details (id, title, description, price, freelancer_id, created_at) with a foreign key linking to `users`.
-- **Access**: Managed via a MySQL connection in the backend using the `mysql2/promise` package.
-- **Sample Data**: Use the provided SQL commands to insert a test user. Gigs are dynamically added via the freelancer dashboard.
+- `gigs`: Stores gig details (id, title, description, price, freelancer_id, created_at) with a foreign key to `users`.
+- **Access**: Managed via `mysql2/promise` with connection pooling in the backend.
+- **Sample Data**: Inserted via the schema SQL; gigs are added dynamically.
 
 ## Technologies Used
 
@@ -143,10 +144,14 @@ Copy
 - React (v18.x) with `createRoot` for rendering.
 - React Router DOM for navigation.
 - Axios for HTTP requests.
-- CSS for styling with Google Fonts (Roboto, Poppins).
+- CSS with Google Fonts (Roboto, Poppins).
 - **Backend**:
 - Node.js with Express for the server.
-- MySQL2/promise for database interactions.
+- MySQL2/promise for Google Cloud SQL interactions.
 - JSON Web Tokens (JWT) for authentication.
-- **Development Environment**: Windows with Command Prompt for running scripts.
-- **Other Tools**: npm for package management, Git for version control (optional).
+- CORS for cross-origin requests.
+- **Development Environment**: Windows with Command Prompt.
+- **Hosting**:
+- Google Cloud SQL (free trial) for the database.
+- Vercel (Hobby plan) for the frontend.
+- **Other Tools**: npm, Git.
