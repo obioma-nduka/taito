@@ -1,10 +1,14 @@
 const express = require('express');
-const db = require('./db'); // Import the pool from db.js
+const cors = require('cors');
+const db = require('./db'); // Import the database pool from db.js
 
 const app = express();
-app.use(express.json());
 
-// Example route to test database
+// Middleware
+app.use(cors({ origin: 'https://taito-client-xyz.vercel.app' })); // Allow requests from your Vercel frontend
+app.use(express.json()); // Parse JSON request bodies
+
+// Test database route
 app.get('/test-db', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT 1 + 1 AS solution');
@@ -14,6 +18,7 @@ app.get('/test-db', async (req, res) => {
   }
 });
 
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
