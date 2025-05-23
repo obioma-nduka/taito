@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+require('dotenv').config(); // Add this line to load .env variables
 const db = require('./db');
 
 const app = express();

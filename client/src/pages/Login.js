@@ -18,7 +18,14 @@ const Login = () => {
         try {
             const res = await axios.post('http://localhost:5000/api/auth/login', formData);
             login(res.data.token, res.data.role, formData.username); // Pass username
-            navigate('/dashboard');
+
+            if (res.data.role === 'freelancer') {
+                navigate('/freelancer-dashboard');
+            } else {
+                navigate('/dashboard');
+            }            
+
+
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
         }

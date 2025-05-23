@@ -28,7 +28,14 @@ const Register = () => {
                 password: formData.password
             });
             login(res.data.token, res.data.role, formData.username); // Pass username
-            navigate('/dashboard');
+
+            if (res.data.role === 'freelancer') {
+                navigate('/freelancer-dashboard');
+            } else {
+                navigate('/dashboard');
+            }
+            
+
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
         }
