@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 
-const Navbar = () => {
+const NavBar = () => {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -12,23 +12,26 @@ const Navbar = () => {
     };
 
     return (
-        <nav>
-            <ul>
-                <li><Link to="/">Home</Link></li>
-                {!user ? (
-                    <>
-                        <li><Link to="/login">Login</Link></li>
-                        <li><Link to="/register">Register</Link></li>
-                    </>
-                ) : (
-                    <>
-                        <li><Link to="/dashboard">Dashboard</Link></li>
-                        <li><button onClick={handleLogout}>Logout</button></li>
-                    </>
-                )}
-            </ul>
+        <nav style={{ padding: '1rem', background: '#eee', marginBottom: '1rem' }}>
+            <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
+            {!user ? (
+                <>
+                    <Link to="/login" style={{ marginRight: '1rem' }}>Login</Link>
+                    <Link to="/register">Register</Link>
+                </>
+            ) : (
+                <>
+                    {user.role === 'customer' && (
+                        <Link to="/dashboard" style={{ marginRight: '1rem' }}>Dashboard</Link>
+                    )}
+                    {user.role === 'freelancer' && (
+                        <Link to="/freelancer-dashboard" style={{ marginRight: '1rem' }}>Freelancer</Link>
+                    )}
+                    <button onClick={handleLogout} style={{ marginLeft: '1rem' }}>Logout</button>
+                </>
+            )}
         </nav>
     );
 };
 
-export default Navbar;
+export default NavBar;
